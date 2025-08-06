@@ -130,6 +130,12 @@
                     <td class="total-label">Shipping</td>
                     <td class="total-value"><?php echo $data['shipping_total'] ? wp_kses_post($data['shipping_total']) : 'Free shipping'; ?></td>
                 </tr>
+                <?php if (isset($data['tax_total']) && $data['tax_total']): ?>
+                <tr>
+                    <td class="total-label">Tax</td>
+                    <td class="total-value"><?php echo wp_kses_post($data['tax_total']); ?></td>
+                </tr>
+                <?php endif; ?>
                 <tr class="final-total">
                     <td class="total-label">Total</td>
                     <td class="total-value"><?php echo wp_kses_post($data['total']); ?></td>
