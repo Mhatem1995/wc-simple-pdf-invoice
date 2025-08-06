@@ -18,17 +18,27 @@ class WC_PDF_Order_Data {
         // Generate invoice number (you can customize this logic)
         $invoice_number = $order->get_id();
         
-        // Get order items with product images - HPOS compatible
+        // Get customer number (user ID or order ID if guest)
+        $customer_number = $order->get_customer_id();
+        if (!$customer_number) {
+            $customer_number = 'GUEST-' . $order->get_id();
+        }
+        
+        // Get order items with product images and URLs - HPOS compatible
         $items = array();
         foreach ($order->get_items() as $item_id => $item) {
             $product = $item->get_product();
             $product_image = '';
+            $product_url = '';
             
             if ($product) {
                 $image_id = $product->get_image_id();
                 if ($image_id) {
                     $product_image = wp_get_attachment_image_url($image_id, 'thumbnail');
                 }
+                
+                // Get product URL
+                $product_url = get_permalink($product->get_id());
             }
             
             // Get item quantity and totals
@@ -45,8 +55,21 @@ class WC_PDF_Order_Data {
                 'name' => $item->get_name(),
                 'quantity' => $quantity,
                 'price' => $item_price,
-                'total' => $item_total
+                'total' => $item_total,
+                'product_url' => $product_url
             );
+        }
+        
+        // Generate QR code for product links if enabled
+        $qr_code_url = '';
+        if (isset($settings['enable_qr_code']) && $settings['enable_qr_code']) {
+            $pdf_generator = new WC_PDF_Generator();
+            $qr_data = $pdf_generator->generate_product_links_qr($items);
+            
+            if ($qr_data) {
+                $qr_filename = 'invoice-' . $invoice_number . '-products';
+                $qr_code_url = $pdf_generator->generate_qr_code($qr_data, $qr_filename);
+            }
         }
         
         // Get order date - HPOS compatible
@@ -78,6 +101,7 @@ class WC_PDF_Order_Data {
         $invoice_data = array(
             'invoice_number' => $invoice_number,
             'order_number' => $order->get_order_number(),
+            'customer_number' => $customer_number,
             'invoice_date' => current_time('m-d-Y'),
             'order_date' => $order_date,
             'order_status' => ucfirst($order->get_status()),
@@ -128,6 +152,8 @@ class WC_PDF_Order_Data {
             
             // Settings
             'enable_barcode' => isset($settings['enable_barcode']) ? $settings['enable_barcode'] : 0,
+            'enable_qr_code' => isset($settings['enable_qr_code']) ? $settings['enable_qr_code'] : 0,
+            'qr_code_url' => $qr_code_url,
         );
         
         return $invoice_data;
