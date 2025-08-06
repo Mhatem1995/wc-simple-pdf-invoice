@@ -8,12 +8,57 @@
     <title>Invoice #<?php echo $data['invoice_number']; ?></title>
     <style>
         <?php 
-        // Include the CSS file content for PDF generation
+        // Include the CSS file content for PDF generation with UTF-8 support
         $css_file = WC_SIMPLE_PDF_INVOICE_PLUGIN_DIR . 'assets/css/invoice.css';
         if (file_exists($css_file)) {
             echo file_get_contents($css_file);
         }
         ?>
+        
+        /* Additional Arabic and Unicode support */
+        @font-face {
+            font-family: 'DejaVu Sans';
+            font-style: normal;
+            font-weight: normal;
+        }
+        
+        body, * {
+            font-family: 'DejaVu Sans', Arial, sans-serif !important;
+        }
+        
+        /* RTL support for Arabic text */
+        .rtl-support {
+            direction: rtl;
+            text-align: right;
+        }
+        
+        .ltr-support {
+            direction: ltr;
+            text-align: left;
+        }
+        
+        /* QR Code styling */
+        .qr-code {
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .qr-code img {
+            max-width: 100px;
+            height: auto;
+        }
+        
+        .qr-code-label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Customer number styling */
+        .customer-number {
+            font-weight: bold;
+            color: #4A90E2;
+        }
     </style>
 </head>
 <body>
@@ -26,8 +71,6 @@
             <div class="logo">
                 <img src="<?php echo esc_url($data['logo_url']); ?>" alt="Company Logo">
             </div>
-            <?php endif; ?>
-        </div>
         
         <!-- Company Info -->
         <div class="company-info">
@@ -73,13 +116,22 @@
                     <strong>Invoice Date:</strong> <?php echo esc_html($data['invoice_date']); ?><br>
                     <strong>Invoice No.:</strong> <?php echo esc_html($data['invoice_number']); ?><br>
                     <strong>Order No.:</strong> <?php echo esc_html($data['order_number']); ?><br>
-                    <strong>Order Date:</strong> <?php echo esc_html($data['order_date']); ?>
+                    <strong>Order Date:</strong> <?php echo esc_html($data['order_date']); ?><br>
+                    <strong>Customer No.:</strong> <span class="customer-number"><?php echo esc_html($data['customer_number']); ?></span>
                 </div>
             </div>
         </div>
         
-        <!-- Barcode (if enabled) -->
-        <?php if ($data['enable_barcode']): ?>
+        <!-- QR Code (if enabled) -->
+        <?php if (isset($data['enable_qr_code']) && $data['enable_qr_code'] && !empty($data['qr_code_url'])): ?>
+        <div class="qr-code">
+            <img src="<?php echo esc_url($data['qr_code_url']); ?>" alt="QR Code for Products">
+            <div class="qr-code-label">Scan to view products online</div>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Barcode (if enabled and QR not enabled) -->
+        <?php if (isset($data['enable_barcode']) && $data['enable_barcode'] && (!isset($data['enable_qr_code']) || !$data['enable_qr_code'] || empty($data['qr_code_url']))): ?>
         <div class="barcode">
             <div class="barcode-image">|||||||||||||||||||</div>
         </div>
@@ -153,4 +205,5 @@
         </div>
     </div>
 </body>
-</html>
+</html>    <?php endif; ?>
+        </div>
