@@ -1,0 +1,61 @@
+/* assets/css/admin.css */
+
+.logo-upload-section {
+    max-width: 400px;
+}
+
+.logo-upload-section img {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+    background: #fff;
+}
+
+#upload_logo_button {
+    margin-right: 10px;
+}
+
+#remove_logo {
+    color: #a00;
+    border-color: #a00;
+}
+
+#remove_logo:hover {
+    background: #a00;
+    color: #fff;
+}
+
+.form-table th {
+    width: 200px;
+    vertical-align: top;
+    padding-top: 15px;
+}
+
+.form-table td p {
+    margin: 10px 0 5px 0;
+    font-weight: 600;
+}
+
+.form-table td p:first-child {
+    margin-top: 0;
+}
+
+.wc-pdf-invoice-download,
+.wc-pdf-invoice-admin-download {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.wc-pdf-invoice-download .button,
+.wc-pdf-invoice-admin-download .button {
+    text-decoration: none;
+}
+
+/* Settings page styling */
+.wrap h1 {
+    margin-bottom: 20px;
+}
+
+.notice {
+    margin: 15px 0;
+}
