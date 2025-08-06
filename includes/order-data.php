@@ -31,12 +31,21 @@ class WC_PDF_Order_Data {
                 }
             }
             
+            // Get item quantity and totals
+            $quantity = $item->get_quantity();
+            $line_subtotal = $item->get_subtotal();
+            $line_total = $item->get_total();
+            
+            // Format prices
+            $item_price = wc_price($line_subtotal / $quantity);
+            $item_total = wc_price($line_total);
+            
             $items[] = array(
                 'image' => $product_image,
                 'name' => $item->get_name(),
-                'quantity' => $item->get_quantity(),
-                'price' => $order->get_formatted_line_subtotal($item),
-                'total' => $order->get_formatted_line_total($item)
+                'quantity' => $quantity,
+                'price' => $item_price,
+                'total' => $item_total
             );
         }
         
@@ -58,6 +67,12 @@ class WC_PDF_Order_Data {
         $shipping_state = $order->get_shipping_state();
         $shipping_postcode = $order->get_shipping_postcode();
         $shipping_country = $order->get_shipping_country();
+        
+        // Get order totals
+        $subtotal = $order->get_subtotal();
+        $shipping_total = $order->get_shipping_total();
+        $total = $order->get_total();
+        $tax_total = $order->get_total_tax();
         
         // Prepare invoice data
         $invoice_data = array(
@@ -103,9 +118,10 @@ class WC_PDF_Order_Data {
             'items' => $items,
             
             // Totals - HPOS compatible
-            'subtotal' => wc_price($order->get_subtotal()),
-            'shipping_total' => $order->get_shipping_total() > 0 ? wc_price($order->get_shipping_total()) : 'Free shipping',
-            'total' => wc_price($order->get_total()),
+            'subtotal' => wc_price($subtotal),
+            'shipping_total' => $shipping_total > 0 ? wc_price($shipping_total) : 'Free shipping',
+            'tax_total' => $tax_total > 0 ? wc_price($tax_total) : null,
+            'total' => wc_price($total),
             
             // Payment method
             'payment_method' => $order->get_payment_method_title(),
