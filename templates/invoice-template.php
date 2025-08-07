@@ -1,19 +1,7 @@
 <?php
 // templates/invoice-template.php
 
-// Helper function to detect Arabic text
-function detect_arabic($text) {
-    return preg_match('/[\x{0600}-\x{06FF}]/u', $text);
-}
-
-// Helper function to reverse Arabic text for proper display in PDF
-function fix_arabic_text($text) {
-    if (detect_arabic($text)) {
-        // Simple Arabic text fixing - you might need a more sophisticated approach
-        return $text;
-    }
-    return $text;
-}
+// Remove duplicate function declarations - use the ones from includes/arabic-text-helper.php
 ?>
 <!DOCTYPE html>
 <html dir="auto">
@@ -23,8 +11,8 @@ function fix_arabic_text($text) {
     <title>Invoice #<?php echo $data['invoice_number']; ?></title>
     <style>
         @font-face {
-            font-family: 'NotoSansArabic';
-            src: url('data:font/truetype;charset=utf-8;base64,') format('truetype');
+            font-family: 'ArabicFont';
+            src: local('Tahoma'), local('Arial Unicode MS'), local('DejaVu Sans');
         }
         
         * {
@@ -39,7 +27,7 @@ function fix_arabic_text($text) {
         }
 
         body {
-            font-family: 'DejaVu Sans', 'Tahoma', 'Arial Unicode MS', Arial, sans-serif;
+            font-family: 'Tahoma', 'DejaVu Sans', 'Arial Unicode MS', Arial, sans-serif;
             font-size: 11px;
             line-height: 1.3;
             color: #333;
@@ -133,18 +121,40 @@ function fix_arabic_text($text) {
             min-height: 80px;
         }
 
-        /* Arabic text support - improved */
+        /* FIXED Arabic text support - Force RTL for Arabic content */
         .arabic-text {
-            direction: rtl;
-            text-align: right;
-            font-family: 'Tahoma', 'DejaVu Sans', 'Arial Unicode MS', sans-serif;
-            unicode-bidi: bidi-override;
+            direction: rtl !important;
+            text-align: right !important;
+            font-family: 'Tahoma', 'Arial Unicode MS', 'DejaVu Sans', sans-serif !important;
+            unicode-bidi: bidi-override !important;
         }
 
         .ltr-text {
-            direction: ltr;
-            text-align: left;
-            unicode-bidi: normal;
+            direction: ltr !important;
+            text-align: left !important;
+            unicode-bidi: normal !important;
+        }
+
+        /* Mixed content - let browser decide but prefer RTL for Arabic */
+        .mixed-content {
+            direction: rtl !important;
+            text-align: right !important;
+            unicode-bidi: plaintext !important;
+        }
+
+        /* Force RTL container for Arabic addresses */
+        .arabic-address {
+            direction: rtl !important;
+            text-align: right !important;
+            font-family: 'Tahoma', 'Arial Unicode MS', sans-serif !important;
+        }
+
+        /* Force RTL for Arabic names */
+        .arabic-name {
+            direction: rtl !important;
+            text-align: right !important;
+            font-family: 'Tahoma', 'Arial Unicode MS', sans-serif !important;
+            font-weight: bold !important;
         }
 
         .codes-section {
@@ -209,6 +219,13 @@ function fix_arabic_text($text) {
             border: 1px solid #ddd;
             font-size: 10px;
             vertical-align: middle;
+        }
+
+        /* Arabic product names in table */
+        .items-table .arabic-product {
+            direction: rtl !important;
+            text-align: right !important;
+            font-family: 'Tahoma', 'Arial Unicode MS', sans-serif !important;
         }
 
         .items-table .text-center {
@@ -285,6 +302,89 @@ function fix_arabic_text($text) {
             font-weight: bold;
         }
 
+        /* Force proper Arabic rendering */
+        .force-arabic {
+            font-family: 'Tahoma', 'Arial Unicode MS', 'DejaVu Sans', sans-serif !important;
+            direction: rtl !important;
+            text-align: right !important;
+            unicode-bidi: bidi-override !important;
+        }
+
+        /* Additional CSS fixes for Arabic text - Maximum specificity */
+        .force-arabic,
+        .arabic-text,
+        div[class*="arabic"],
+        span[class*="arabic"] {
+            direction: rtl !important;
+            text-align: right !important;
+            font-family: 'Tahoma', 'Arial Unicode MS', 'DejaVu Sans', sans-serif !important;
+            unicode-bidi: bidi-override !important;
+        }
+
+        /* Specific fixes for common Arabic text containers */
+        .info-block .force-arabic,
+        .info-block .arabic-text {
+            display: block !important;
+            width: 100% !important;
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        /* Fix for Arabic names in bold */
+        .info-block strong.force-arabic,
+        .info-block strong.arabic-text {
+            direction: rtl !important;
+            text-align: right !important;
+            display: block !important;
+        }
+
+        /* Fix for address blocks */
+        .info-block div:has(.force-arabic),
+        .info-block div.force-arabic {
+            direction: rtl !important;
+            text-align: right !important;
+            unicode-bidi: bidi-override !important;
+        }
+
+        /* Fix for table cells with Arabic content */
+        td.force-arabic,
+        td.arabic-text,
+        .items-table td.force-arabic {
+            direction: rtl !important;
+            text-align: right !important;
+            unicode-bidi: bidi-override !important;
+        }
+
+        /* Company info section Arabic fix */
+        .company-info .force-arabic,
+        .company-info .arabic-text {
+            direction: rtl !important;
+            text-align: center !important; /* Keep center alignment for company info */
+        }
+
+        /* Ensure Arabic text in mixed content is handled correctly */
+        .mixed-arabic {
+            direction: rtl !important;
+            text-align: right !important;
+            unicode-bidi: plaintext !important;
+        }
+
+        /* Override any conflicting styles */
+        [dir="ltr"] .force-arabic,
+        [dir="ltr"] .arabic-text {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        /* Specific fix for customer names like "حسام مصطفى" */
+        .customer-name-arabic {
+            direction: rtl !important;
+            text-align: right !important;
+            font-family: 'Tahoma', 'Arial Unicode MS' !important;
+            font-weight: bold !important;
+            unicode-bidi: bidi-override !important;
+        }
+
         @media print {
             body { 
                 font-size: 10px; 
@@ -307,10 +407,14 @@ function fix_arabic_text($text) {
 
         <!-- Company Info -->
         <div class="company-info">
-            <div class="company-name"><?php echo esc_html($data['from_company_name']); ?></div>
-            <div class="company-tagline"><?php echo esc_html($data['from_tagline']); ?></div>
-            <div class="company-address <?php echo detect_arabic($data['from_address']) ? 'arabic-text' : 'ltr-text'; ?>">
-                <?php echo nl2br(esc_html(fix_arabic_text($data['from_address']))); ?>
+            <div class="company-name <?php echo WC_PDF_Arabic_Helper::detect_arabic($data['from_company_name']) ? 'force-arabic' : ''; ?>">
+                <?php echo esc_html(WC_PDF_Arabic_Helper::fix_arabic_text($data['from_company_name'])); ?>
+            </div>
+            <div class="company-tagline <?php echo WC_PDF_Arabic_Helper::detect_arabic($data['from_tagline']) ? 'force-arabic' : ''; ?>">
+                <?php echo esc_html(WC_PDF_Arabic_Helper::fix_arabic_text($data['from_tagline'])); ?>
+            </div>
+            <div class="company-address <?php echo WC_PDF_Arabic_Helper::detect_arabic($data['from_address']) ? 'force-arabic' : ''; ?>">
+                <?php echo nl2br(esc_html(WC_PDF_Arabic_Helper::fix_arabic_text($data['from_address']))); ?>
             </div>
         </div>
 
@@ -320,11 +424,11 @@ function fix_arabic_text($text) {
             <div class="billing-info">
                 <div class="section-title">Billing Address:</div>
                 <div class="info-block">
-                    <div class="<?php echo detect_arabic($data['billing_name']) ? 'arabic-text' : 'ltr-text'; ?>">
-                        <strong><?php echo esc_html(fix_arabic_text($data['billing_name'])); ?></strong>
+                    <div class="<?php echo WC_PDF_Arabic_Helper::detect_arabic($data['billing_name']) ? 'force-arabic' : 'ltr-text'; ?>">
+                        <strong><?php echo esc_html(WC_PDF_Arabic_Helper::fix_arabic_text($data['billing_name'])); ?></strong>
                     </div>
-                    <div class="<?php echo detect_arabic($data['billing_address']) ? 'arabic-text' : 'ltr-text'; ?>">
-                        <?php echo nl2br(esc_html(fix_arabic_text($data['billing_address']))); ?>
+                    <div class="<?php echo WC_PDF_Arabic_Helper::detect_arabic($data['billing_address']) ? 'force-arabic' : 'ltr-text'; ?>">
+                        <?php echo nl2br(esc_html(WC_PDF_Arabic_Helper::fix_arabic_text($data['billing_address']))); ?>
                     </div>
                     <?php if ($data['billing_email']): ?>
                         <div class="ltr-text">
@@ -344,11 +448,11 @@ function fix_arabic_text($text) {
                 <div class="section-title">Shipping Address:</div>
                 <div class="info-block">
                     <?php if ($data['shipping_name']): ?>
-                        <div class="<?php echo detect_arabic($data['shipping_name']) ? 'arabic-text' : 'ltr-text'; ?>">
-                            <strong><?php echo esc_html(fix_arabic_text($data['shipping_name'])); ?></strong>
+                        <div class="<?php echo WC_PDF_Arabic_Helper::detect_arabic($data['shipping_name']) ? 'force-arabic' : 'ltr-text'; ?>">
+                            <strong><?php echo esc_html(WC_PDF_Arabic_Helper::fix_arabic_text($data['shipping_name'])); ?></strong>
                         </div>
-                        <div class="<?php echo detect_arabic($data['shipping_address']) ? 'arabic-text' : 'ltr-text'; ?>">
-                            <?php echo nl2br(esc_html(fix_arabic_text($data['shipping_address']))); ?>
+                        <div class="<?php echo WC_PDF_Arabic_Helper::detect_arabic($data['shipping_address']) ? 'force-arabic' : 'ltr-text'; ?>">
+                            <?php echo nl2br(esc_html(WC_PDF_Arabic_Helper::fix_arabic_text($data['shipping_address']))); ?>
                         </div>
                         <?php if ($data['shipping_phone']): ?>
                             <div class="ltr-text">
@@ -440,8 +544,8 @@ function fix_arabic_text($text) {
                             <div style="width: 30px; height: 30px; background: #f0f0f0; border-radius: 2px; display: inline-block;"></div>
                         <?php endif; ?>
                     </td>
-                    <td class="<?php echo detect_arabic($item['name']) ? 'arabic-text' : 'ltr-text'; ?>">
-                        <?php echo esc_html(fix_arabic_text($item['name'])); ?>
+                    <td class="<?php echo WC_PDF_Arabic_Helper::detect_arabic($item['name']) ? 'force-arabic' : 'ltr-text'; ?>">
+                        <?php echo esc_html(WC_PDF_Arabic_Helper::fix_arabic_text($item['name'])); ?>
                     </td>
                     <td class="text-center"><?php echo esc_html($item['quantity']); ?></td>
                     <td class="text-right"><?php echo wp_kses_post($item['price']); ?></td>
@@ -481,8 +585,8 @@ function fix_arabic_text($text) {
         <!-- Payment Info -->
         <div class="payment-info">
             <strong>Payment method:</strong> 
-            <span class="<?php echo detect_arabic($data['payment_method']) ? 'arabic-text' : 'ltr-text'; ?>">
-                <?php echo esc_html(fix_arabic_text($data['payment_method'])); ?>
+            <span class="<?php echo WC_PDF_Arabic_Helper::detect_arabic($data['payment_method']) ? 'force-arabic' : 'ltr-text'; ?>">
+                <?php echo esc_html(WC_PDF_Arabic_Helper::fix_arabic_text($data['payment_method'])); ?>
             </span>
         </div>
     </div>
