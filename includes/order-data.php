@@ -83,6 +83,7 @@ class WC_PDF_Order_Data {
         $billing_state = $order->get_billing_state();
         $billing_postcode = $order->get_billing_postcode();
         $billing_country = $order->get_billing_country();
+        $billing_phone = $order->get_billing_phone();
         
         $shipping_address_1 = $order->get_shipping_address_1();
         $shipping_address_2 = $order->get_shipping_address_2();
@@ -90,6 +91,12 @@ class WC_PDF_Order_Data {
         $shipping_state = $order->get_shipping_state();
         $shipping_postcode = $order->get_shipping_postcode();
         $shipping_country = $order->get_shipping_country();
+        
+        // Try to get shipping phone (meta field as WooCommerce doesn't have a built-in shipping phone field)
+        $shipping_phone = $order->get_meta('_shipping_phone', true);
+        if (empty($shipping_phone)) {
+            $shipping_phone = $billing_phone; // Fallback to billing phone
+        }
         
         // Get order totals
         $subtotal = $order->get_subtotal();
@@ -114,7 +121,7 @@ class WC_PDF_Order_Data {
             // Company logo
             'logo_url' => isset($settings['logo_url']) ? $settings['logo_url'] : '',
             
-            // Billing address - HPOS compatible
+            // Billing address - HPOS compatible with phone
             'billing_name' => trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()),
             'billing_address' => self::format_address(array(
                 'address_1' => $billing_address_1,
@@ -125,9 +132,9 @@ class WC_PDF_Order_Data {
                 'country' => $billing_country
             )),
             'billing_email' => $order->get_billing_email(),
-            'billing_phone' => $order->get_billing_phone(),
+            'billing_phone' => $billing_phone,
             
-            // Shipping address - HPOS compatible
+            // Shipping address - HPOS compatible with phone
             'shipping_name' => trim($order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name()),
             'shipping_address' => self::format_address(array(
                 'address_1' => $shipping_address_1,
@@ -137,6 +144,7 @@ class WC_PDF_Order_Data {
                 'postcode' => $shipping_postcode,
                 'country' => $shipping_country
             )),
+            'shipping_phone' => $shipping_phone,
             
             // Order items
             'items' => $items,
@@ -154,6 +162,9 @@ class WC_PDF_Order_Data {
             'enable_barcode' => isset($settings['enable_barcode']) ? $settings['enable_barcode'] : 0,
             'enable_qr_code' => isset($settings['enable_qr_code']) ? $settings['enable_qr_code'] : 0,
             'qr_code_url' => $qr_code_url,
+            
+            // Barcode data for generation
+            'barcode_data' => 'INV' . $invoice_number,
         );
         
         return $invoice_data;
@@ -199,8 +210,10 @@ class WC_PDF_Order_Data {
         return trim($formatted);
     }
     
-    public static function generate_barcode_data($invoice_number) {
-        // Simple barcode representation - you can integrate with a real barcode library
-        return str_repeat('|', 20) . ' ' . $invoice_number;
+    /**
+     * Detect if text contains Arabic characters
+     */
+    public static function detect_arabic($text) {
+        return preg_match('/[\x{0600}-\x{06FF}]/u', $text);
     }
 }
