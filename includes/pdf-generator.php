@@ -31,23 +31,39 @@ class WC_PDF_Generator {
         // Generate HTML content
         $html = $this->generate_html($invoice_data);
         
-        // Configure Dompdf with better Arabic support
+        // Enhanced Dompdf configuration for Arabic support
         $options = new \Dompdf\Options();
+        
+        // Font settings for Arabic support
         $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('fontSubsetting', true);
+        $options->set('isFontSubsettingEnabled', true);
+        
+        // HTML parsing
         $options->set('isHtml5ParserEnabled', true);
+        $options->set('isPhpEnabled', false);
+        
+        // Remote content
         $options->set('isRemoteEnabled', true);
-        $options->set('fontSubsetting', false);
-        $options->set('isFontSubsettingEnabled', false);
         $options->set('chroot', realpath(WC_SIMPLE_PDF_INVOICE_PLUGIN_DIR));
         
+        // Memory and performance
+        $options->set('tempDir', sys_get_temp_dir());
+        $options->set('logOutputFile', WP_CONTENT_DIR . '/debug.log');
+        
+        // Create Dompdf instance
         $dompdf = new \Dompdf\Dompdf($options);
         
-        // Set the HTML with UTF-8 encoding
+        // Load HTML with explicit UTF-8 encoding
         $dompdf->loadHtml($html, 'UTF-8');
+        
+        // Set paper size and orientation
         $dompdf->setPaper('A4', 'portrait');
+        
+        // Render PDF
         $dompdf->render();
         
-        // Output PDF
+        // Output PDF with Arabic-friendly filename
         $filename = 'invoice-' . $invoice_data['invoice_number'] . '.pdf';
         $dompdf->stream($filename, array('Attachment' => true));
         exit;
@@ -73,13 +89,20 @@ class WC_PDF_Generator {
         
         $html = $this->generate_html($invoice_data);
         
-        // Configure Dompdf with better Arabic support
+        // Enhanced Dompdf configuration for Arabic support
         $options = new \Dompdf\Options();
+        
+        // Font settings for Arabic support
         $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('fontSubsetting', true);
+        $options->set('isFontSubsettingEnabled', true);
+        
+        // HTML parsing
         $options->set('isHtml5ParserEnabled', true);
+        $options->set('isPhpEnabled', false);
+        
+        // Remote content
         $options->set('isRemoteEnabled', true);
-        $options->set('fontSubsetting', false);
-        $options->set('isFontSubsettingEnabled', false);
         $options->set('chroot', realpath(WC_SIMPLE_PDF_INVOICE_PLUGIN_DIR));
         
         $dompdf = new \Dompdf\Dompdf($options);
@@ -276,16 +299,31 @@ class WC_PDF_Generator {
     }
     
     /**
-     * Detect Arabic text in string
+     * Enhanced HTML generation with proper Arabic encoding
      */
-    public function detect_arabic($text) {
-        return preg_match('/[\x{0600}-\x{06FF}]/u', $text);
-    }
-    
     private function generate_html($data) {
+        // Set locale for proper text handling
+        if (function_exists('setlocale')) {
+            setlocale(LC_ALL, 'en_US.UTF-8');
+        }
+        
+        // Start output buffering with UTF-8
         ob_start();
+        
+        // Include the template
         include WC_SIMPLE_PDF_INVOICE_PLUGIN_DIR . 'templates/invoice-template.php';
-        return ob_get_clean();
+        
+        $html = ob_get_clean();
+        
+        // Ensure proper UTF-8 encoding
+        if (!mb_check_encoding($html, 'UTF-8')) {
+            $html = mb_convert_encoding($html, 'UTF-8', 'auto');
+        }
+        
+        // Add UTF-8 BOM for better Arabic support in some PDF viewers
+        $html = "\xEF\xBB\xBF" . $html;
+        
+        return $html;
     }
     
     private function check_dompdf() {
